@@ -15,24 +15,24 @@ const getPayments = (req, res) => {
     const data = db.query(sql, [status, status, unixDatetime, unixDatetime]);
     res.json({ payments: data });
   } catch (error) {
-    console.error("Error getting Payments:", error.message);
+    console.error("Error getting payments:", error.message);
     res.status(400).json({ error: error.message });
   }
 };
 
 // ! END OF ORIGINAL PROMPT -- EXTRA ROUTES BEGIN HERE
 
-const getPaymentById = (req, res) => {
-  const { id } = req.params;
-
-  const sql = `
+const getPaymentSql = `
     SELECT *
     FROM payments
     WHERE id = ?
   `;
 
+const getPaymentById = (req, res) => {
+  const { id } = req.params;
+
   try {
-    const [data] = db.query(sql, [id]);
+    const [data] = db.query(getPaymentSql, [id]);
 
     if (data) {
       res.json({ payment: data });
@@ -40,7 +40,7 @@ const getPaymentById = (req, res) => {
       res.json({ error: "No payment with that ID exists" });
     }
   } catch (error) {
-    console.error("Error getting Payment:", error.message);
+    console.error("Error getting payment:", error.message);
     res.status(400).json({ error: error.message });
   }
 };
@@ -50,26 +50,21 @@ const createPayment = (req, res) => {
   validatePayment(name, email, amount_cents, date, status);
   const unixDatetime = Date.parse(date);
 
-  const sqlCreate = `
+  const sql = `
     INSERT INTO payments (name, email, amount_cents, datetime, status)
     VALUES (?, ?, ?, ?, ?)
   `;
-  const sqlGet = `
-    SELECT *
-    FROM payments
-    WHERE id = ?
-  `;
 
   try {
-    const insert = db.run(sqlCreate, [
+    const result = db.run(sql, [
       name,
       email,
       amount_cents,
       unixDatetime,
       status,
     ]);
-    if (insert.changes) {
-      const [data] = db.query(sqlGet, [insert.lastInsertRowid]);
+    if (result.changes) {
+      const [data] = db.query(getPaymentSql, [result.lastInsertRowid]);
       res.json({ payment: data });
     } else {
       res.json({ error: "Error creating payment" });
@@ -99,10 +94,47 @@ const validatePayment = (name, email, amount_cents, date, status) => {
   if (messages.length) throw new Error(messages.join(" "));
 };
 
+const updatePayment = (req, res) => {
+  const { id } = req.params;
+  const { name, email, amount_cents, date, status } = req.body;
+  const unixDatetime = Date.parse(date);
+
+  const sql = `
+    UPDATE payments
+    SET name = COALESCE(?, name),
+        email = COALESCE(?, email),
+        amount_cents = COALESCE(?, amount_cents),
+        datetime = COALESCE(?, datetime),
+        status = COALESCE(?, status)
+    WHERE id = ?
+  `;
+
+  try {
+    const result = db.run(sql, [
+      name,
+      email,
+      amount_cents,
+      unixDatetime,
+      status,
+      id,
+    ]);
+    if (result.changes) {
+      const [data] = db.query(getPaymentSql, [id]);
+      res.json({ payment: data });
+    } else {
+      res.json({ error: "No changes were made to payment" });
+    }
+  } catch (error) {
+    console.error("Error editing payment:", error.message);
+    res.status(400).json({ error: error.message });
+  }
+};
+
 const paymentsController = {
   getPayments,
   getPaymentById,
   createPayment,
+  updatePayment,
 };
 
 export default paymentsController;
