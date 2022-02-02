@@ -130,11 +130,34 @@ const updatePayment = (req, res) => {
   }
 };
 
+const deletePayment = (req, res) => {
+  const { id } = req.params;
+
+  const sql = `
+    DELETE
+    FROM payments
+    WHERE id = ?
+  `;
+
+  try {
+    const result = db.run(sql, [id]);
+    if (result.changes) {
+      res.json({ message: "Successfully deleted payment" });
+    } else {
+      res.json({ error: "Error deleting payment" });
+    }
+  } catch (error) {
+    console.error("Error deleting payment:", error.message);
+    res.status(400).json({ error: error.message });
+  }
+};
+
 const paymentsController = {
   getPayments,
   getPaymentById,
   createPayment,
   updatePayment,
+  deletePayment,
 };
 
 export default paymentsController;
