@@ -38,5 +38,5 @@ yarn start
 
 - **app.js**: runs the express server.
 - **/routes/payments.js**: a list of all the endpoints, which call the controller functions.
-- **/controllers/paymentsController.js**: the controller, functions which hanlde the CRUD operations.
+- **/controllers/paymentsController.js**: the controller, functions which handle the CRUD operations.
 - **/services/db.js**: the only file that directly accesses the database, used in controller to make SQL queries.
