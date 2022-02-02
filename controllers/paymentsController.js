@@ -142,7 +142,7 @@ const deletePayment = (req, res) => {
   try {
     const result = db.run(sql, [id]);
     if (result.changes) {
-      res.json({ message: "Successfully deleted payment" });
+      res.sendStatus(200);
     } else {
       res.json({ error: "Error deleting payment" });
     }
