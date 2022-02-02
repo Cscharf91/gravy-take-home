@@ -4,7 +4,7 @@ By Cory Scharf
 
 ---
 
-This is a simple CRUD API created for the Gravy take home challenge. After completing the prompt, I decided to add a few extra routes since I had most of the logic set up.
+This is a simple CRUD API created in Express.js for the Gravy take home challenge. After completing the prompt, I decided to add a few extra routes since I had most of the logic set up.
 
 ## Get Started:
 
@@ -39,4 +39,4 @@ yarn start
 - **app.js**: runs the express server.
 - **/routes/payments.js**: a list of all the endpoints, which call the controller functions.
 - **/controllers/paymentsController.js**: the controller, functions which hanlde the CRUD operations.
-- **/services/db.js**: the only file that directly accesses the database, used in controller to make SQL squeries/
+- **/services/db.js**: the only file that directly accesses the database, used in controller to make SQL queries.
