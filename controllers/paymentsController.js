@@ -22,6 +22,29 @@ const getPayments = (req, res) => {
 
 // ! END OF ORIGINAL PROMPT -- EXTRA ROUTES BEGIN HERE
 
+const getPaymentById = (req, res) => {
+  const { id } = req.params;
+
+  const sql = `
+    SELECT *
+    FROM payments
+    WHERE id = ?
+  `;
+
+  try {
+    const [data] = db.query(sql, [id]);
+
+    if (data) {
+      res.json({ payment: data });
+    } else {
+      res.json({ error: "No payment with that ID exists" });
+    }
+  } catch (error) {
+    console.error("Error getting Payment:", error.message);
+    res.status(400).json({ error: error.message });
+  }
+};
+
 const createPayment = (req, res) => {
   const { name, email, amount_cents, date, status } = req.body;
   validatePayment(name, email, amount_cents, date, status);
@@ -52,7 +75,7 @@ const createPayment = (req, res) => {
       res.json({ error: "Error creating payment" });
     }
   } catch (error) {
-    console.error("Error getting Payments:", error.message);
+    console.error("Error creating Payments:", error.message);
     res.status(400).json({ error: error.message });
   }
 };
@@ -78,6 +101,7 @@ const validatePayment = (name, email, amount_cents, date, status) => {
 
 const paymentsController = {
   getPayments,
+  getPaymentById,
   createPayment,
 };
 
