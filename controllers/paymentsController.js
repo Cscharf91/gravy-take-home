@@ -4,7 +4,6 @@ import db from "../services/db.js";
 const getPayments = (req, res) => {
   const { date, status } = req.query;
   const jsDate = new Date(date);
-  console.log("jsDate", jsDate);
   if (date && !isValidDate(jsDate)) {
     res.json({
       error:
@@ -12,7 +11,7 @@ const getPayments = (req, res) => {
     });
   } else {
     const sql = `
-      SELECT *, strftime('%Y-%m-%d', date(datetime, 'unixepoch')) AS cool
+      SELECT *
       FROM payments
       WHERE ( status = ? OR ? IS NULL )
         AND ( strftime('%Y-%m-%d', date(datetime, 'unixepoch')) = ? OR ? IS NULL )
