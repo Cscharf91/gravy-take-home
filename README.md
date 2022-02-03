@@ -34,6 +34,12 @@ yarn start
 | /api/v1/payments/:id | payments   | GET    | id                                                                                                                              | JSON            | Return the payment from id                 |
 | /api/v1/payments/:id | payments   | DELETE | id                                                                                                                              | status 200      | Delete the payment, related to the sent id |
 
+## Run Tests
+
+```
+npm run test
+```
+
 ## Important Files:
 
 - **app.js**: runs the express server.
