@@ -14,7 +14,7 @@ const getPayments = (req, res) => {
       SELECT *
       FROM payments
       WHERE ( status = ? OR ? IS NULL )
-        AND ( strftime('%Y-%m-%d', date(datetime, 'unixepoch')) = ? OR ? IS NULL )
+        AND ( strftime('%Y-%m-%d', date(datetime, 'unixepoch')) = date(?) OR ? IS NULL )
     `;
 
     try {
@@ -54,15 +54,23 @@ const getPaymentById = (req, res) => {
 
 const createPayment = (req, res) => {
   const { name, email, amount_cents, date, status } = req.body;
+
   try {
     validatePayment(name, email, amount_cents, date, status);
+    const unixDatetime = Math.round(Date.parse(date) / 1000);
 
     const sql = `
     INSERT INTO payments (name, email, amount_cents, datetime, status)
-    VALUES (?, ?, ?, strftime('%s', ?), ?)
+    VALUES (?, ?, ?, ?, ?)
   `;
 
-    const result = db.run(sql, [name, email, amount_cents, date, status]);
+    const result = db.run(sql, [
+      name,
+      email,
+      amount_cents,
+      unixDatetime,
+      status,
+    ]);
     if (result.changes) {
       const [data] = db.query(getPaymentSql, [result.lastInsertRowid]);
       res.json({ payment: data });
@@ -97,19 +105,27 @@ const validatePayment = (name, email, amount_cents, date, status) => {
 const updatePayment = (req, res) => {
   const { id } = req.params;
   const { name, email, amount_cents, date, status } = req.body;
+  const unixDatetime = Math.round(Date.parse(date) / 1000);
 
   const sql = `
     UPDATE payments
     SET name = COALESCE(?, name),
         email = COALESCE(?, email),
         amount_cents = COALESCE(?, amount_cents),
-        datetime = COALESCE(strftime('%s', ?), datetime),
+        datetime = COALESCE(?, datetime),
         status = COALESCE(?, status)
     WHERE id = ?
   `;
 
   try {
-    const result = db.run(sql, [name, email, amount_cents, date, status, id]);
+    const result = db.run(sql, [
+      name,
+      email,
+      amount_cents,
+      unixDatetime,
+      status,
+      id,
+    ]);
     if (result.changes) {
       const [data] = db.query(getPaymentSql, [id]);
       res.json({ payment: data });
