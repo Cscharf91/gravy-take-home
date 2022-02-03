@@ -9,8 +9,11 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.use("/api/v1/payments", paymentsRoutes);
-const PORT = 5000;
+
+const PORT = process.env.NODE_ENV === "test" ? 3000 : 5000;
 
 app.listen(PORT, () => {
-  console.log(`Server listening on ${PORT}`);
+  if (PORT === 5000) console.log(`Server listening on ${PORT}`);
 });
+
+export default app;
