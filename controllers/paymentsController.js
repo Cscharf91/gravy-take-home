@@ -1,22 +1,30 @@
+import isValidDate from "../helpers/isValidDate.js";
 import db from "../services/db.js";
 
 const getPayments = (req, res) => {
   const { date, status } = req.query;
-  const unixDatetime = Date.parse(date);
+  const jsDate = new Date(date);
+  console.log("jsDate", jsDate);
+  if (date && !isValidDate(jsDate)) {
+    res.json({
+      error:
+        "Invalid date provided. Must be in format YYYY-MM-DD and a valid calendar date.",
+    });
+  } else {
+    const sql = `
+      SELECT *, strftime('%Y-%m-%d', date(datetime, 'unixepoch')) AS cool
+      FROM payments
+      WHERE ( status = ? OR ? IS NULL )
+        AND ( strftime('%Y-%m-%d', date(datetime, 'unixepoch')) = ? OR ? IS NULL )
+    `;
 
-  const sql = `
-    SELECT *
-    FROM payments
-    WHERE ( status = ? OR ? IS NULL )
-      AND ( datetime = ? OR ? IS NULL )
-  `;
-
-  try {
-    const data = db.query(sql, [status, status, unixDatetime, unixDatetime]);
-    res.json({ payments: data });
-  } catch (error) {
-    console.error("Error getting payments:", error.message);
-    res.status(400).json({ error: error.message });
+    try {
+      const data = db.query(sql, [status, status, date, date]);
+      res.json({ payments: data });
+    } catch (error) {
+      console.error("Error getting payments:", error.message);
+      res.status(400).json({ error: error.message });
+    }
   }
 };
 
@@ -47,22 +55,15 @@ const getPaymentById = (req, res) => {
 
 const createPayment = (req, res) => {
   const { name, email, amount_cents, date, status } = req.body;
-  validatePayment(name, email, amount_cents, date, status);
-  const unixDatetime = Date.parse(date);
+  try {
+    validatePayment(name, email, amount_cents, date, status);
 
-  const sql = `
+    const sql = `
     INSERT INTO payments (name, email, amount_cents, datetime, status)
-    VALUES (?, ?, ?, ?, ?)
+    VALUES (?, ?, ?, strftime('%s', ?), ?)
   `;
 
-  try {
-    const result = db.run(sql, [
-      name,
-      email,
-      amount_cents,
-      unixDatetime,
-      status,
-    ]);
+    const result = db.run(sql, [name, email, amount_cents, date, status]);
     if (result.changes) {
       const [data] = db.query(getPaymentSql, [result.lastInsertRowid]);
       res.json({ payment: data });
@@ -97,27 +98,19 @@ const validatePayment = (name, email, amount_cents, date, status) => {
 const updatePayment = (req, res) => {
   const { id } = req.params;
   const { name, email, amount_cents, date, status } = req.body;
-  const unixDatetime = Date.parse(date);
 
   const sql = `
     UPDATE payments
     SET name = COALESCE(?, name),
         email = COALESCE(?, email),
         amount_cents = COALESCE(?, amount_cents),
-        datetime = COALESCE(?, datetime),
+        datetime = COALESCE(strftime('%s', ?), datetime),
         status = COALESCE(?, status)
     WHERE id = ?
   `;
 
   try {
-    const result = db.run(sql, [
-      name,
-      email,
-      amount_cents,
-      unixDatetime,
-      status,
-      id,
-    ]);
+    const result = db.run(sql, [name, email, amount_cents, date, status, id]);
     if (result.changes) {
       const [data] = db.query(getPaymentSql, [id]);
       res.json({ payment: data });
