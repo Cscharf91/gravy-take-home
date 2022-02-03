@@ -9,11 +9,6 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.use("/api/v1/payments", paymentsRoutes);
-
-app.get("/", (req, res) => {
-  res.json({ message: "alive" });
-});
-
 const PORT = 5000;
 
 app.listen(PORT, () => {
